@@ -71,23 +71,48 @@ export default function Editor({ $page, initialState }) {
         }">${this.state.content}</div>
       `;
     }
-    if (this.state.content === "") {
-    }
-    this.focused(); //render가 될때마다 addEventListener가 되는걸 고치고 싶었는데 실패함.
-  };
 
+    window.addEventListener("click", (event) => {
+      switch (event.target.className) {
+        case "editor-content":
+          console.log("스위치케이스", clickflag);
+          this.focused();
+          break;
+        case "editor-title":
+          break;
+        default:
+          this.focusOut();
+      }
+    });
+  };
+  let clickflag;
   this.focused = () => {
-    const $contentInput = $page.querySelector(".editor-content");
-    //편집기에 포커스가 향하게 된다면 html태그를 마크다운 언어로 풀어준다.
-    $contentInput.addEventListener("focus", () => {
-      const contentEditableContent = htmlToMarkdown(this.state.content);
-      $page.innerHTML = `
+    //편집기에 포커스가 향하게 된다면 html태그를 마크다운 언어로 풀어주고, 편집기능 시작.
+    console.log("focused발생", clickflag);
+    if (clickflag) {
+      return;
+    }
+    const contentEditableContent = htmlToMarkdown(this.state.content);
+    $page.innerHTML = `
       <input type="text" class="editor-title" name="title" style="width:93%; height:5%; margin:20px;" value="${this.state.title}">
       <div contenteditable="true" class="editor-content" id="contentInput" ">${contentEditableContent}</div>
     `;
-    });
+
+    const $contentInput = document.getElementById("contentInput");
+    $contentInput.focus();
+    clickflag = true;
   };
 
-  // editor에 입력이 있으면 handleKeyUp 실행
+  this.focusOut = () => {
+    //편집기에 사라지면 마크다운 언어를 html로 바꿔준다.
+    console.log("focusout발생", clickflag);
+    const contentEditableContent = markdownToHtml(this.state.content);
+    $page.innerHTML = `
+      <input type="text" class="editor-title" name="title" style="width:93%; height:5%; margin:20px;" value="${this.state.title}">
+      <div contenteditable="true" class="editor-content" id="contentInput" ">${contentEditableContent}</div>
+    `;
+    clickflag = false;
+  };
+
   $page.addEventListener("keyup", (e) => handleKeyUp(e));
 }
